@@ -39,7 +39,7 @@ main {
     justify-content: center;
 }
 
-#bienvenida {
+.bienvenida {
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -47,27 +47,28 @@ main {
     gap: 20px;
 }
 
-#bienvenida h1 {
+.bienvenida h1 {
     font-size: 80px;
     color: #F0C040;
     letter-spacing: 8px;
     text-transform: uppercase;
 }
 
-#bienvenida h2 {
+.bienvenida h2 {
     font-size: 28px;
     color: #7A8FA6;
     letter-spacing: 4px;
 }
 
-#bienvenida p {
+.bienvenida p {
     font-size: 18px;
     color: #FFFFFF;
     max-width: 500px;
     line-height: 1.6;
 }
 
-#btn-jugar {
+.btn-jugar {
+
     margin-top: 16px;
     padding: 16px 48px;
     background-color: transparent;
@@ -80,13 +81,13 @@ main {
     transition: background-color 0.3s, color 0.3s, transform 0.2s;
 }
 
-#btn-jugar:hover {
+.btn-jugar:hover {
     background-color: #F0C040;
     color: #111111;
     transform: scale(1.05);
 }
 
-#btn-jugar:active {
+.btn-jugar:active {
     transform: scale(0.98);
 }
 
