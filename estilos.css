@@ -1,0 +1,106 @@
+body {
+    background-color: #111111;
+    color: #FFFFFF;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #1a1a1a;
+    border-bottom: 2px solid #F0C040;
+    padding: 16px 32px;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    gap: 32px;
+}
+
+header nav ul li a {
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+}
+
+header nav ul li a:hover {
+    color: #F0C040;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bienvenida {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.bienvenida h1 {
+    font-size: 80px;
+    color: #F0C040;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+}
+
+.bienvenida h2 {
+    font-size: 28px;
+    color: #7A8FA6;
+    letter-spacing: 4px;
+}
+
+.bienvenida p {
+    font-size: 18px;
+    color: #FFFFFF;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.btn-jugar {
+    margin-top: 16px;
+    padding: 16px 48px;
+    background-color: transparent;
+    border: 2px solid #F0C040;
+    color: #F0C040;
+    font-size: 20px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s;
+}
+
+.btn-jugar:hover {
+    background-color: #F0C040;
+    color: #111111;
+    transform: scale(1.05);
+}
+
+.btn-jugar:active {
+    transform: scale(0.98);
+}
+
+footer {
+    background-color: #1a1a1a;
+    border-top: 2px solid #F0C040;
+    padding: 16px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+footer p {
+    color: #7A8FA6;
+    font-size: 13px;
+}
