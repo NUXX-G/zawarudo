@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Za Warudo - Juego</title>
+    <link rel="stylesheet" href="../estilos.css">
+    <link rel="icon" id="favicon" href="../recursos/imagenes/faviconV1.png" type="image/png">
+</head>
+
+<body>
+
+    <header>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Inicio</a></li>
+                <li><a href="juego.html">Jugar</a></li>
+                <li><a href="ranking.html">Ranking</a></li>
+                <li><a href="sobre-nosotros.html">Sobre nosotros</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- PANTALLA 1: REGISTRO -->
+        <div class="pantalla activa" id="pantalla-registro">
+            <h1>Nueva partida</h1>
+            <div class="formulario">
+                <div class="campo">
+                    <label>Nombre jugador 1</label>
+                    <input type="text" id="nombre-j1" placeholder="Introduce tu nombre">
+                </div>
+                <div class="campo">
+                    <label>Nombre jugador 2</label>
+                    <input type="text" id="nombre-j2" placeholder="Introduce tu nombre">
+                </div>
+                <div class="campo">
+                    <label>Nivel</label>
+                    <select id="nivel">
+                        <option value="1">Facil — 1 titulo — 5 minutos</option>
+                        <option value="3">Medio — 3 titulos — 3 minutos</option>
+                        <option value="5">Dificil — 5 titulos — 1 min 30 s</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Genero sorteado</label>
+                    <p id="genero-sorteado" class="genero-texto">—</p>
+                </div>
+                <button class="btn-jugar" id="btn-sortear">Sortear genero</button>
+                <button class="btn-jugar" id="btn-empezar">Empezar partida</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 2: INSERTAR PALABRAS -->
+        <div class="pantalla" id="pantalla-palabras">
+            <h1 id="titulo-insertar">Jugador 1 — introduce tus titulos</h1>
+            <p id="genero-actual" class="genero-texto"></p>
+            <div class="formulario">
+                <div id="inputs-palabras"></div>
+                <button class="btn-jugar" id="btn-guardar-palabras">Guardar titulos</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 3: TURNO DE JUEGO -->
+        <div class="pantalla" id="pantalla-juego">
+            <div class="juego-cabecera">
+                <h1 id="turno-titulo">Turno de Jugador 1</h1>
+                <div class="temporizador" id="temporizador">00:00</div>
+                <div class="puntuacion">
+                    <span id="puntos-j1-label">Jugador 1: </span><strong id="puntos-j1">0</strong> pts
+                    &nbsp;|&nbsp;
+                    <span id="puntos-j2-label">Jugador 2: </span><strong id="puntos-j2">0</strong> pts
+                </div>
+            </div>
+
+            <div class="tablero-rival">
+                <h2>Titulos del rival</h2>
+                <div id="lista-palabras-rival"></div>
+            </div>
+
+            <div class="acciones">
+                <div class="accion">
+                    <h3>Proponer letra</h3>
+                    <div class="fila-input">
+                        <input type="text" id="input-letra" maxlength="1" placeholder="A">
+                        <button class="btn-jugar" id="btn-letra">Enviar letra</button>
+                    </div>
+                    <p id="msg-letra" class="mensaje"></p>
+                </div>
+                <div class="accion">
+                    <h3>Adivinar titulo completo</h3>
+                    <div class="fila-input">
+                        <input type="text" id="input-adivinar" placeholder="Escribe el titulo">
+                        <button class="btn-jugar" id="btn-adivinar">Adivinar</button>
+                    </div>
+                    <p id="msg-adivinar" class="mensaje"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA 4: FIN DE PARTIDA -->
+        <div class="pantalla" id="pantalla-fin">
+            <h1 id="titulo-ganador">¡Za Warudo!</h1>
+            <p id="texto-ganador" class="genero-texto"></p>
+            <div class="puntuacion-final">
+                <div class="tarjeta">
+                    <h2 id="nombre-final-j1"></h2>
+                    <p id="puntos-final-j1"></p>
+                </div>
+                <div class="tarjeta">
+                    <h2 id="nombre-final-j2"></h2>
+                    <p id="puntos-final-j2"></p>
+                </div>
+            </div>
+            <button class="btn-jugar" id="btn-jugar-otra">Jugar otra vez</button>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Za Warudo &copy; 2026 — Yeray Trejo Sanchez y Nelson Filipe Fardilha Karlsson</p>
+        <p>DAM — CPIFP Alan Turing, Malaga</p>
+    </footer>
+
+    <audio class="musica-juego" src="../recursos/audios/EndOfTheWorld.mp3" loop></audio>
+
+    <script src="../js/juego.js"></script>
+
+</body>
+
+</html>

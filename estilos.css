@@ -221,3 +221,207 @@ footer p {
     font-size: 16px;
     line-height: 1.8;
 }
+
+/*Pagina juego*/
+
+.pantalla {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 60px 40px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.pantalla.activa {
+    display: flex;
+}
+
+.pantalla h1 {
+    font-size: 42px;
+    color: #F0C040;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.campo label {
+    color: #7A8FA6;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.campo input,
+.campo select {
+    background-color: #1a1a1a;
+    border: 2px solid #F0C040;
+    color: #FFFFFF;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    outline: none;
+}
+
+.campo input:focus,
+.campo select:focus {
+    border-color: #FFFFFF;
+}
+
+.campo select option {
+    background-color: #1a1a1a;
+}
+
+.genero-texto {
+    color: #2ECC40;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.juego-cabecera {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.temporizador {
+    font-size: 48px;
+    color: #F0C040;
+    letter-spacing: 4px;
+    font-weight: bold;
+}
+
+.temporizador.urgente {
+    color: #FF4444;
+    animation: parpadeo 0.5s infinite;
+}
+
+.puntuacion {
+    color: #7A8FA6;
+    font-size: 16px;
+}
+
+.tablero-rival {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tablero-rival h2 {
+    color: #F0C040;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.palabra-rival {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    padding: 16px 24px;
+    font-size: 22px;
+    letter-spacing: 6px;
+    color: #FFFFFF;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.palabra-rival.adivinada {
+    border-color: #2ECC40;
+    color: #2ECC40;
+}
+
+.acciones {
+    display: flex;
+    gap: 40px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.accion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-width: 240px;
+}
+
+.accion h3 {
+    color: #7A8FA6;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.fila-input {
+    display: flex;
+    gap: 8px;
+}
+
+.fila-input input {
+    background-color: #1a1a1a;
+    border: 2px solid #F0C040;
+    color: #FFFFFF;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    outline: none;
+    flex: 1;
+}
+
+.mensaje {
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.mensaje.ok {
+    color: #2ECC40;
+}
+
+.mensaje.error {
+    color: #FF4444;
+}
+
+.puntuacion-final {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.puntuacion-final .tarjeta {
+    min-width: 200px;
+}
+
+.puntuacion-final .tarjeta p {
+    color: #2ECC40;
+    font-size: 20px;
+}
+
+@keyframes parpadeo {
+    0%   { opacity: 1; }
+    50%  { opacity: 0.3; }
+    100% { opacity: 1; }
+}
