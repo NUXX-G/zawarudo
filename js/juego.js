@@ -196,10 +196,12 @@ function actualizarCabeceraJuego() {
     document.getElementById("puntos-j2").textContent = estado.puntosJ2;
 }
 
-var letrasReveladas = [];
+var letrasReveladas = { 1: [], 2: [] };
 
 function cargarTableroRival() {
     var rivalId = estado.turno === 1 ? estado.j2.id : estado.j1.id;
+    var rivalNum = estado.turno === 1 ? 2 : 1;
+
     fetch(API + "/palabras/" + rivalId)
     .then(function(res) { return res.json(); })
     .then(function(palabras) {
@@ -218,7 +220,7 @@ function cargarTableroRival() {
             if (p.adivinada) {
                 div.textContent = p.palabra;
             } else {
-                var revelada = revelarLetras(p.palabra, letrasReveladas);
+                var revelada = revelarLetras(p.palabra, letrasReveladas[rivalNum]);
                 div.textContent = revelada;
                 if (revelada.replace(/ /g, "") === p.palabra.replace(/ /g, "")) {
                     div.classList.add("adivinada");
@@ -228,10 +230,10 @@ function cargarTableroRival() {
         });
 
         var todasReveladas = Array.from(contenedor.querySelectorAll(".palabra-rival")).every(function(d) {
-         return d.classList.contains("adivinada");
+            return d.classList.contains("adivinada");
         });
         if (todasReveladas && palabras.length > 0) {
-        finPartida();
+            finPartida();
         }
     })
     .catch(function(error) {
@@ -256,14 +258,22 @@ function pasarTurno() {
     mostrarMensaje("msg-adivinar", "", "");
     document.getElementById("input-letra").value = "";
     document.getElementById("input-adivinar").value = "";
-    letrasReveladas = [];
     iniciarTemporizador();
 }
 
 function proponerLetra() {
     var letra = document.getElementById("input-letra").value.trim();
+
     if (!letra || letra.length !== 1) {
         mostrarMensaje("msg-letra", "Introduce una sola letra", "error");
+        return;
+    }
+
+    var letraLower = letra.toLowerCase();
+    var rivalNum = estado.turno === 1 ? 2 : 1;
+
+    if (letrasReveladas[rivalNum].includes(letraLower)) {
+        mostrarMensaje("msg-letra", "Esa letra ya fue usada", "error");
         return;
     }
 
@@ -272,32 +282,51 @@ function proponerLetra() {
     fetch(API + "/letra", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ letra: letra, jugador_id: rivalId })
+        body: JSON.stringify({ letra: letraLower, jugador_id: rivalId })
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
+
+        letrasReveladas[rivalNum].push(letraLower);
+
         if (data.aparece) {
             var apariciones = 0;
+
             data.palabras.forEach(function(p) {
-                var regex = new RegExp(letra, "gi");
+                var regex = new RegExp(letraLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "gi");
                 var matches = p.palabra.match(regex);
                 if (matches) apariciones += matches.length;
             });
 
-            letrasReveladas.push(letra.toLowerCase());
+            var puntos = apariciones * 5;
 
             if (estado.turno === 1) {
-                estado.puntosJ1 += apariciones * 5;
+                estado.puntosJ1 += puntos;
             } else {
-                estado.puntosJ2 += apariciones * 5;
+                estado.puntosJ2 += puntos;
             }
-            mostrarMensaje("msg-letra", "La letra " + letra.toUpperCase() + " aparece " + apariciones + " vez/veces — +" + (apariciones * 5) + " puntos", "ok");
+
+            mostrarMensaje(
+                "msg-letra",
+                "La letra " + letraLower.toUpperCase() +
+                " aparece " + apariciones +
+                " vez/veces — +" + puntos + " puntos",
+                "ok"
+            );
+
             cargarTableroRival();
             actualizarCabeceraJuego();
+
         } else {
-            mostrarMensaje("msg-letra", "La letra " + letra.toUpperCase() + " no aparece — pierdes el turno", "error");
+            mostrarMensaje(
+                "msg-letra",
+                "La letra " + letraLower.toUpperCase() +
+                " no aparece — pierdes el turno",
+                "error"
+            );
             setTimeout(pasarTurno, 1500);
         }
+
         document.getElementById("input-letra").value = "";
     })
     .catch(function(error) {
