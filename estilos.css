@@ -106,6 +106,7 @@ footer p {
     font-size: 13px;
 }
 
+/*--------------Pagina sobre nosostros---------------*/
 
 .sobre-nosotros {
     padding: 60px 40px;
@@ -222,7 +223,7 @@ footer p {
     line-height: 1.8;
 }
 
-/*Pagina juego*/
+/*--------------Pagina juego---------------*/
 
 .pantalla {
     display: none;
@@ -358,6 +359,7 @@ footer p {
     width: 100%;
     flex-wrap: wrap;
     justify-content: center;
+    padding: 0 20px;
 }
 
 .accion {
@@ -365,7 +367,8 @@ footer p {
     flex-direction: column;
     gap: 12px;
     flex: 1;
-    min-width: 240px;
+    min-width: 280px;
+    max-width: 420px;
 }
 
 .accion h3 {
@@ -378,6 +381,7 @@ footer p {
 .fila-input {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 .fila-input input {
@@ -389,6 +393,14 @@ footer p {
     font-family: Arial, sans-serif;
     outline: none;
     flex: 1;
+    height: 44px;
+}
+
+.fila-input .btn-jugar {
+    height: 44px;
+    padding: 0 20px;
+    white-space: nowrap;
+    font-size: 14px;
 }
 
 .mensaje {

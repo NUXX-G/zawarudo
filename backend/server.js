@@ -92,7 +92,7 @@ server.get("/palabras/:id", (req, res) => {
             return {
                 id: fila.id,
                 adivinada: fila.adivinada,
-                palabra: fila.adivinada ? fila.palabra : fila.palabra.replace(/[a-zA-Z]/g, "_")
+                palabra: fila.palabra
             };
         });
         res.json(censuradas);
