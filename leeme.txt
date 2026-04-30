@@ -1,0 +1,27 @@
+
+
+# ZA WARUDO - El juego
+
+Este es nuestro proyecto de clase. Es un juego de adivinar titulos de videojuegos por turnos, un poco como el ahorcado pero mas picado y con una tematica de Jojos que le da todo el estilo (no combina nada, pero al final esta guapisimo).
+
+## Como va la vaina
+La idea es que dos jugadores se registran, eligen una dificultad y sortean un genero de videojuegos. Cada uno escribe sus titulos en secreto y luego toca adivinar los del rival usando letras o tirandote a la piscina con el titulo completo. Todo esto mientras el tiempo corre, asi que no te puedes dormir.
+
+## Que hemos usado
+*   **HTML y CSS:** Para que todo se vea bien oscuro y con ese toque dorado.
+*   **JavaScript:** Toda la logica de los turnos, el temporizador y los cambios de pantalla.
+*   **Node.js y MySQL:** Para guardar a los jugadores, las partidas y que los datos no se pierdan.
+*   **Multimedia:** Hemos metido videos de fondo y musica para que la experiencia sea mas pro.
+
+## Lo que queda pendiente
+Todavia no esta todo terminado. Esto es lo que falta por meter:
+*   **Ranking:** La pagina ya existe pero aun no muestra la lista de los mejores jugadores. Tenemos que conectar bien los datos para que se vea quien manda.
+*   **Arreglar Errores** Hay algun que otro error que no hemos corregido.
+*   **Sistema Online** Nos gustari meter un sistema online si nos sobra tiempo.
+*   **Ajustes varios:** Algun retoque en el diseño y terminar de pulir que el servidor no de problemas cuando hay mucha tralla.
+
+## Los autores
+Yeray y Nelson. Ambos somos unos genios de la programcion, hemos tocado un poco de todo cada uno, 
+y hemos modificado cada uno todos los archivos en repetidas ocasiones, y lo mas complicado no ha sido programar, 
+sino el hecho de que se nos olvida hacer pull, y esto nos da errores de merge incluso con distintas ramas ;). 
+

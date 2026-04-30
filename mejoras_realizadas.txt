@@ -1,0 +1,7 @@
+Fondo de JoJo's: Hemos metido un video de fondo en el menu. Es de JoJo's, queda increible y, la verdad, era algo obligatorio para subir el nivel (PERDON, al parecer mi compañero no realizo un pull, y forzo un push y elimino el video, en la proxima version si estara).
+
+Musica a tope: Ahora hay canciones tanto en el menu principal como dentro del juego. Le da toda la emocion que le faltaba (Te recomeindo bajar el volumen ;)).
+
+Iconos locos (Favicons): El icono de la pestaña del navegador cambia solo. Cada vez que entras puede salir uno distinto. Es un detalle muy guapo que hace la pagina mas dinamica (Y uque era completamente esencial para nuestra pagina).
+
+Volumen pro: Hemos programado la musica para que no te exploten los oidos, bajandola un poquito por defecto (Aun asi sigue super alta, esot para que no te quedes dormido).

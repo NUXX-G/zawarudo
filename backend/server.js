@@ -1,19 +1,33 @@
+/**
+ * @file servidor.js
+ * @brief Este es el motor del juego. Se encarga de hablar con la base de datos MySQL.
+ * Aqui es donde se guardan los jugadores, sus palabras y quien va ganando.
+ * @author Yeray y nelson
+ */
+
 // Importamos los modulos necesarios
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 
-// Creamos una instancia de express
+/** @brief Instancia de Express para gestionar las peticiones HTTP */
 const server = express();
 
-// Habilitamos las peticiones desde el frontend
+/** 
+ * @brief Configuracion de middleware.
+ * CORS permite que el frontend (puerto normal) hable con el backend (puerto 3000).
+ * JSON permite que el servidor entienda cuando le enviamos datos en formato objeto.
+ */
 server.use(cors());
 server.use(express.json());
 
-// Puerto donde correra el servidor
+/** @brief El puerto por el que escuchara nuestro servidor */
 const PORT = 3000;
 
-// Pool de conexiones a mysql
+/** 
+ * @brief Configuracion del grupo (pool) de conexiones a MySQL.
+ * Usamos un "pool" para no tener que abrir y cerrar la conexion cada vez que alguien hace algo.
+ */
 const pool_mysql = mysql.createPool({
     host: "localhost",
     port: 3306,
@@ -25,7 +39,10 @@ const pool_mysql = mysql.createPool({
     queueLimit: 0
 });
 
-// Arrancamos el servidor solo cuando la BD este conectada
+/**
+ * @brief Intenta conectar con la base de datos y, si lo logra, arranca el servidor.
+ * Si la base de datos falla, el programa se cierra para no dar errores raros luego.
+ */
 function iniciarServidor() {
     pool_mysql.getConnection((error, connection) => {
         if (error) {
@@ -41,6 +58,10 @@ function iniciarServidor() {
 
 iniciarServidor();
 
+/**
+ * @brief RUTA: Crea un nuevo jugador en la tabla 'jugadores'.
+ * Al principio, todos los jugadores empiezan con 0 partidas ganadas.
+ */
 server.post("/jugador", (req, res) => {
     const { nombre } = req.body;
     const sql = "INSERT INTO jugadores (nombre, partidas_ganadas) VALUES (?, 0)";
@@ -53,7 +74,10 @@ server.post("/jugador", (req, res) => {
     });
 });
 
-// POST /palabra - Inserta una palabra y la vincula a un jugador
+/**
+ * @brief RUTA: Guarda una palabra y la asocia a un jugador.
+ * Primero mete la palabra en la tabla 'palabras' y luego crea el vinculo en 'jugadores_palabras'.
+ */
 server.post("/palabra", (req, res) => {
     const { palabra, jugador_id } = req.body;
     const sqlPalabra = "INSERT INTO palabras (palabra) VALUES (?)";
@@ -74,7 +98,10 @@ server.post("/palabra", (req, res) => {
     });
 });
 
-// GET /palabras/:id - Devuelve las palabras de un jugador (censuradas para el rival)
+/**
+ * @brief RUTA: Trae todas las palabras que pertenecen a un jugador concreto.
+ * Hace un JOIN entre las tablas para saber que palabras son de quien.
+ */
 server.get("/palabras/:id", (req, res) => {
     const jugador_id = req.params.id;
     const sql = `
@@ -99,7 +126,9 @@ server.get("/palabras/:id", (req, res) => {
     });
 });
 
-// GET /jugador/:id - Devuelve los datos de un jugador
+/**
+ * @brief RUTA: Busca los datos de un jugador por su ID (ej: para saber su nombre o victoriass).
+ */
 server.get("/jugador/:id", (req, res) => {
     const id = req.params.id;
     const sql = "SELECT * FROM jugadores WHERE id = ?";
@@ -115,7 +144,10 @@ server.get("/jugador/:id", (req, res) => {
     });
 });
 
-// PUT /letra - Desvela una letra en todas las palabras del jugador rival
+/**
+ * @brief RUTA: Comprueba si una letra existe en las palabras que el rival aun no ha adivinado.
+ * Recorre todas las palabras del jugador indicado y devuelve si la letra aparece o no.
+ */
 server.put("/letra", (req, res) => {
     const { letra, jugador_id } = req.body;
     const sql = `
@@ -138,7 +170,10 @@ server.put("/letra", (req, res) => {
     });
 });
 
-// DELETE /palabra/:id - Elimina una palabra adivinada
+/**
+ * @brief RUTA: Marca una palabra como adivinada en la base de datos.
+ * No borra la palabra, solo cambia su estado a "true" (adivinada).
+ */
 server.delete("/palabra/:id", (req, res) => {
     const id = req.params.id;
     const sql = "UPDATE jugadores_palabras SET adivinada = true WHERE palabra_id = ?";
@@ -151,7 +186,9 @@ server.delete("/palabra/:id", (req, res) => {
     });
 });
 
-// PUT /jugador/:id - Actualiza las partidas ganadas
+/**
+ * @brief RUTA: Suma una victoria al marcador del jugador que ha ganado la partida.
+ */
 server.put("/jugador/:id", (req, res) => {
     const id = req.params.id;
     const sql = "UPDATE jugadores SET partidas_ganadas = partidas_ganadas + 1 WHERE id = ?";
@@ -164,7 +201,10 @@ server.put("/jugador/:id", (req, res) => {
     });
 });
 
-// PUT /reset-partida - Resetea todas las palabras (adivinada = false)
+/**
+ * @brief RUTA: Limpia el estado de la partida para que todas las palabras vuelvan a estar ocultas.
+ * Pone el campo 'adivinada' a 'false' para todo el mundo.
+ */
 server.put("/reset-partida", (req, res) => {
     const sql = "UPDATE jugadores_palabras SET adivinada = false";
     pool_mysql.query(sql, (error) => {

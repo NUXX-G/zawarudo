@@ -1,13 +1,26 @@
+/**
+ * @file juego.js
+ * @brief Este archivo contiene toda la "chicha" del juego: desde el registro hasta el final.
+ * @author Yeray y Nelson
+ */
+
+/** @brief La direccion donde esta escuchando nuestro servidor (el backend) */
 const API = "http://localhost:3000";
 
+/** @brief Los tipos de juegos que pueden salir en el sorteo */
 const generos = [
     "Accion", "Aventura", "RPG", "Deportes",
     "Terror", "Estrategia", "Plataformas",
     "Lucha", "Simulacion", "Puzzle"
 ];
 
+/** @brief Diccionario para saber cuantos segundos dar segun la dificultad (1, 3 o 5) */
 const tiempos = { "1": 300, "3": 180, "5": 90 };
 
+/** 
+ * @brief La "caja" donde guardamos todo lo que pasa en la partida.
+ * Aqui controlamos quien juega, que nivel hay, los puntos y el reloj.
+ */
 var estado = {
     j1: null,
     j2: null,
@@ -22,6 +35,11 @@ var estado = {
     palabrasInsertadasJ2: 0
 };
 
+/**
+ * @brief Sirve para saltar de una parte del juego a otra (ej: del registro al juego).
+ * Lo que hace es quitarle la clase "activa" a todas las pantallas y darsela solo a la que queremos.
+ * @param id El nombre del div que queremos que se vea.
+ */
 function mostrarPantalla(id) {
     document.querySelectorAll(".pantalla").forEach(function(p) {
         p.classList.remove("activa");
@@ -29,16 +47,33 @@ function mostrarPantalla(id) {
     document.getElementById(id).classList.add("activa");
 }
 
+/**
+ * @brief Pinta un texto en la pantalla para avisar de algo al usuario.
+ * @param id Donde vamos a escribir.
+ * @param texto Que vamos a escribir (ej: "¡Has acertado!").
+ * @param tipo Clase CSS para que el mensaje salga en verde (ok) o rojo (error).
+ */
 function mostrarMensaje(id, texto, tipo) {
     var el = document.getElementById(id);
     el.textContent = texto;
     el.className = "mensaje " + tipo;
 }
 
+/**
+ * @brief Convierte una palabra normala en una fila de guiones.
+ * Es util para cuando queremos que el rival no vea el titulo directamente.
+ * @param palabra El texto original.
+ * @return El texto transformado (ej: "Zelda" -> "_____").
+ */
 function censurarPalabra(palabra) {
     return palabra.replace(/[a-zA-Z]/g, "_");
 }
 
+/**
+ * @brief Arranca el reloj de la partida. 
+ * Cada segundo resta 1 al contador y actualiza lo que ve el usuario.
+ * Si quedan menos de 10 segundos, el reloj se pone en rojo ("urgente").
+ */
 function iniciarTemporizador() {
     estado.segundosRestantes = tiempos[String(estado.nivel)];
     actualizarDisplayTemporizador();
@@ -55,11 +90,13 @@ function iniciarTemporizador() {
     }, 1000);
 }
 
+/** @brief Para el tiempo por completo y limpia el color rojo de urgencia. */
 function pararTemporizador() {
     clearInterval(estado.temporizador);
     document.getElementById("temporizador").classList.remove("urgente");
 }
 
+/** @brief Calcula los minutos y segundos para que el reloj se vea bonito (00:00). */
 function actualizarDisplayTemporizador() {
     var mins = Math.floor(estado.segundosRestantes / 60);
     var segs = estado.segundosRestantes % 60;
@@ -67,11 +104,16 @@ function actualizarDisplayTemporizador() {
         (mins < 10 ? "0" : "") + mins + ":" + (segs < 10 ? "0" : "") + segs;
 }
 
+/** @brief Elige un genero de la lista al azar y lo pone en el texto del menu. */
 function sortearGenero() {
     estado.genero = generos[Math.floor(Math.random() * generos.length)];
     document.getElementById("genero-sorteado").textContent = estado.genero;
 }
 
+/**
+ * @brief Comprueba que los nombres y el genero esten listos y registra a los jugadores en la API.
+ * Usa "fetch" para enviar los nombres al servidor y espera a que este le responda.
+ */
 function empezarPartida() {
     var nombreJ1 = document.getElementById("nombre-j1").value.trim();
     var nombreJ2 = document.getElementById("nombre-j2").value.trim();
@@ -111,6 +153,11 @@ function empezarPartida() {
     });
 }
 
+/**
+ * @brief Crea dinamicamente tantos cuadros de texto como titulos haya que meter.
+ * Dependiendo de si el nivel es 1, 3 o 5, apareceran mas o menos inputs en pantalla.
+ * @param numJugador Para saber si le toca escribir al Jugador 1 o al Jugador 2.
+ */
 function prepararInsertarPalabras(numJugador) {
     var jugador = numJugador === 1 ? estado.j1 : estado.j2;
     document.getElementById("titulo-insertar").textContent =
@@ -136,6 +183,10 @@ function prepararInsertarPalabras(numJugador) {
     mostrarPantalla("pantalla-palabras");
 }
 
+/**
+ * @brief Recoge lo que el jugador ha escrito y lo manda a la API para guardarlo.
+ * @param numJugador El jugador que esta enviando sus palabras.
+ */
 function guardarPalabras(numJugador) {
     var jugador = numJugador === 1 ? estado.j1 : estado.j2;
     var inputs = document.querySelectorAll(".input-palabra");
@@ -174,6 +225,7 @@ function guardarPalabras(numJugador) {
     });
 }
 
+/** @brief Configura la pantalla de juego, pone el volumen de la musica y lanza el tiempo. */
 function iniciarJuego() {
     mostrarPantalla("pantalla-juego");
     actualizarCabeceraJuego();
@@ -186,6 +238,7 @@ function iniciarJuego() {
     }
 }
 
+/** @brief Actualiza los textos de arriba: de quien es el turno y cuantos puntos lleva cada uno. */
 function actualizarCabeceraJuego() {
     var jugadorActual = estado.turno === 1 ? estado.j1 : estado.j2;
     document.getElementById("turno-titulo").textContent =
@@ -196,8 +249,13 @@ function actualizarCabeceraJuego() {
     document.getElementById("puntos-j2").textContent = estado.puntosJ2;
 }
 
+/** @brief Un almacen para recordar que letras ha ido diciendo cada jugador. */
 var letrasReveladas = { 1: [], 2: [] };
 
+/**
+ * @brief Pide a la API las palabras que el rival ha escondido y las muestra en el tablero.
+ * Si una palabra ya se adivino, sale completa. Si no, sale con guiines y las letras que ya se sepan.
+ */
 function cargarTableroRival() {
     var rivalId = estado.turno === 1 ? estado.j2.id : estado.j1.id;
     var rivalNum = estado.turno === 1 ? 2 : 1;
@@ -241,6 +299,12 @@ function cargarTableroRival() {
     });
 }
 
+/**
+ * @brief Decide que caracteres mostrar y cuales ocultar tras un guion.
+ * @param palabra El titulo completo.
+ * @param letras El conjunto de letras que el jugador ya ha intentado.
+ * @return El string resultante para pintar en el HTML.
+ */
 function revelarLetras(palabra, letras) {
     return palabra.split("").map(function(char) {
         if (char === " ") return " ";
@@ -249,6 +313,7 @@ function revelarLetras(palabra, letras) {
     }).join("");
 }
 
+/** @brief Detiene todo, cambia el turno al otro jugador, limpia los inputs y vuelve a empezar el reloj. */
 function pasarTurno() {
     pararTemporizador();
     estado.turno = estado.turno === 1 ? 2 : 1;
@@ -261,6 +326,11 @@ function pasarTurno() {
     iniciarTemporizador();
 }
 
+/**
+ * @brief Se encarga de validar la letra que escribe el usuario.
+ * Pregunta al servidor si esa letra esta en las palabras del rival. 
+ * Si esta, suma puntos; si no, el jugador pierde el turno tras un breve retardo.
+ */
 function proponerLetra() {
     var letra = document.getElementById("input-letra").value.trim();
 
@@ -334,6 +404,10 @@ function proponerLetra() {
     });
 }
 
+/**
+ * @brief Comprueba si el texto que ha escrito el usuario coincide exactamente con algun titulo del rival.
+ * Si acierta, borra la palabra de la lista "pendiente" y da puntos extra si lo hizo rapido.
+ */
 function adivinarTitulo() {
     var intento = document.getElementById("input-adivinar").value.trim().toLowerCase();
     if (!intento) {
@@ -376,6 +450,10 @@ function adivinarTitulo() {
     }
 }
 
+/**
+ * @brief Se encarga de cerrar la partida.
+ * Para el reloj, avisa al servidor para limpiar los datos y enseña el marcador final con el ganador.
+ */
 function finPartida() {
     pararTemporizador();
     var ganador = estado.turno === 1 ? estado.j1 : estado.j2;
@@ -386,7 +464,6 @@ function finPartida() {
     })
     .then(function(res) { return res.json(); })
     .then(function() {
-        // ahora sí, cuando ya está reseteado
         return fetch(API + "/jugador/" + ganador.id, {
             method: "PUT",
             headers: { "Content-Type": "application/json" }
@@ -411,6 +488,10 @@ function finPartida() {
     if (musicaJuego) musicaJuego.pause();
 }
 
+/**
+ * @brief Aqui "escuchamos" las acciones del usuario.
+ * Cuando se carga el documento, preparamos todos los botones y las teclas "Enter" para que funcionen.
+ */
 document.addEventListener("DOMContentLoaded", function() {
 
     document.getElementById("btn-sortear").addEventListener("click", function() {
