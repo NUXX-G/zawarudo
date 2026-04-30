@@ -380,13 +380,21 @@ function finPartida() {
     pararTemporizador();
     var ganador = estado.turno === 1 ? estado.j1 : estado.j2;
 
-    fetch(API + "/jugador/" + ganador.id, {
+    fetch(API + "/reset-partida", {
         method: "PUT",
         headers: { "Content-Type": "application/json" }
     })
     .then(function(res) { return res.json(); })
+    .then(function() {
+        // ahora sí, cuando ya está reseteado
+        return fetch(API + "/jugador/" + ganador.id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" }
+        });
+    })
+    .then(function(res) { return res.json(); })
     .catch(function(error) {
-        console.error("Error al actualizar partidas ganadas:", error);
+        console.error("Error en fin de partida:", error);
     });
 
     document.getElementById("titulo-ganador").textContent = "¡" + ganador.nombre + " gana!";
@@ -398,6 +406,7 @@ function finPartida() {
 
     mostrarPantalla("pantalla-fin");
 
+    letrasReveladas = { 1: [], 2: [] };
     var musicaJuego = document.querySelector(".musica-juego");
     if (musicaJuego) musicaJuego.pause();
 }

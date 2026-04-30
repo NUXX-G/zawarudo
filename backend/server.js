@@ -163,3 +163,15 @@ server.put("/jugador/:id", (req, res) => {
         res.json({ mensaje: "Partidas ganadas actualizadas", id });
     });
 });
+
+// PUT /reset-partida - Resetea todas las palabras (adivinada = false)
+server.put("/reset-partida", (req, res) => {
+    const sql = "UPDATE jugadores_palabras SET adivinada = false";
+    pool_mysql.query(sql, (error) => {
+        if (error) {
+            console.error("Error al resetear partida:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Partida reseteada correctamente" });
+    });
+});
