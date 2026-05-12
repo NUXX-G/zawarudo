@@ -1,11 +1,10 @@
 /**
- * @file servidor.js
+ * @file server.js
  * @brief Este es el motor del juego. Se encarga de hablar con la base de datos MySQL.
  * Aqui es donde se guardan los jugadores, sus palabras y quien va ganando.
  * @author Yeray y nelson
  */
 
-// Importamos los modulos necesarios
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
@@ -15,8 +14,8 @@ const server = express();
 
 /** 
  * @brief Configuracion de middleware.
- * CORS permite que el frontend (puerto normal) hable con el backend (puerto 3000).
- * JSON permite que el servidor entienda cuando le enviamos datos en formato objeto.
+ * CORS permite que el frontend hable con el backend.
+ * JSON permite que el servidor entienda datos en formato objeto.
  */
 server.use(cors());
 server.use(express.json());
@@ -25,8 +24,8 @@ server.use(express.json());
 const PORT = 3000;
 
 /** 
- * @brief Configuracion del grupo (pool) de conexiones a MySQL.
- * Usamos un "pool" para no tener que abrir y cerrar la conexion cada vez que alguien hace algo.
+ * @brief Configuracion del pool de conexiones a MySQL.
+ * Usamos un pool para no abrir y cerrar la conexion cada vez.
  */
 const pool_mysql = mysql.createPool({
     host: "localhost",
@@ -40,8 +39,8 @@ const pool_mysql = mysql.createPool({
 });
 
 /**
- * @brief Intenta conectar con la base de datos y, si lo logra, arranca el servidor.
- * Si la base de datos falla, el programa se cierra para no dar errores raros luego.
+ * @brief Intenta conectar con la base de datos y arranca el servidor si lo logra.
+ * Si falla, el programa se cierra para no dar errores raros.
  */
 function iniciarServidor() {
     pool_mysql.getConnection((error, connection) => {
@@ -59,24 +58,34 @@ function iniciarServidor() {
 iniciarServidor();
 
 /**
- * @brief RUTA: Crea un nuevo jugador en la tabla 'jugadores'.
- * Al principio, todos los jugadores empiezan con 0 partidas ganadas.
+ * @brief RUTA: Crea un nuevo jugador o devuelve el existente si ya hay uno con ese nombre.
+ * Asi evitamos duplicados en el ranking.
  */
 server.post("/jugador", (req, res) => {
     const { nombre } = req.body;
-    const sql = "INSERT INTO jugadores (nombre, partidas_ganadas) VALUES (?, 0)";
-    pool_mysql.query(sql, [nombre], (error, resultado) => {
+    const sqlBuscar = "SELECT * FROM jugadores WHERE nombre = ?";
+    pool_mysql.query(sqlBuscar, [nombre], (error, resultados) => {
         if (error) {
-            console.error("Error al insertar jugador:", error);
+            console.error("Error al buscar jugador:", error);
             return res.status(500).json({ error });
         }
-        res.json({ id: resultado.insertId, nombre });
+        if (resultados.length > 0) {
+            return res.json({ id: resultados[0].id, nombre: resultados[0].nombre });
+        }
+        const sqlInsertar = "INSERT INTO jugadores (nombre, partidas_ganadas) VALUES (?, 0)";
+        pool_mysql.query(sqlInsertar, [nombre], (error2, resultado) => {
+            if (error2) {
+                console.error("Error al insertar jugador:", error2);
+                return res.status(500).json({ error: error2 });
+            }
+            res.json({ id: resultado.insertId, nombre });
+        });
     });
 });
 
 /**
  * @brief RUTA: Guarda una palabra y la asocia a un jugador.
- * Primero mete la palabra en la tabla 'palabras' y luego crea el vinculo en 'jugadores_palabras'.
+ * Primero mete la palabra en palabras y luego crea el vinculo en jugadores_palabras.
  */
 server.post("/palabra", (req, res) => {
     const { palabra, jugador_id } = req.body;
@@ -99,7 +108,7 @@ server.post("/palabra", (req, res) => {
 });
 
 /**
- * @brief RUTA: Trae todas las palabras que pertenecen a un jugador concreto.
+ * @brief RUTA: Trae todas las palabras activas de un jugador concreto.
  * Hace un JOIN entre las tablas para saber que palabras son de quien.
  */
 server.get("/palabras/:id", (req, res) => {
@@ -127,7 +136,7 @@ server.get("/palabras/:id", (req, res) => {
 });
 
 /**
- * @brief RUTA: Busca los datos de un jugador por su ID (ej: para saber su nombre o victoriass).
+ * @brief RUTA: Busca los datos de un jugador por su ID.
  */
 server.get("/jugador/:id", (req, res) => {
     const id = req.params.id;
@@ -145,8 +154,21 @@ server.get("/jugador/:id", (req, res) => {
 });
 
 /**
- * @brief RUTA: Comprueba si una letra existe en las palabras que el rival aun no ha adivinado.
- * Recorre todas las palabras del jugador indicado y devuelve si la letra aparece o no.
+ * @brief RUTA: Devuelve todos los jugadores ordenados por partidas ganadas.
+ */
+server.get("/ranking", (req, res) => {
+    const sql = "SELECT nombre, partidas_ganadas FROM jugadores ORDER BY partidas_ganadas DESC";
+    pool_mysql.query(sql, (error, resultados) => {
+        if (error) {
+            console.error("Error al obtener ranking:", error);
+            return res.status(500).json({ error });
+        }
+        res.json(resultados);
+    });
+});
+
+/**
+ * @brief RUTA: Comprueba si una letra existe en las palabras no adivinadas del jugador indicado.
  */
 server.put("/letra", (req, res) => {
     const { letra, jugador_id } = req.body;
@@ -172,7 +194,6 @@ server.put("/letra", (req, res) => {
 
 /**
  * @brief RUTA: Marca una palabra como adivinada en la base de datos.
- * No borra la palabra, solo cambia su estado a "true" (adivinada).
  */
 server.delete("/palabra/:id", (req, res) => {
     const id = req.params.id;
@@ -187,7 +208,7 @@ server.delete("/palabra/:id", (req, res) => {
 });
 
 /**
- * @brief RUTA: Suma una victoria al marcador del jugador que ha ganado la partida.
+ * @brief RUTA: Suma una victoria al jugador que ha ganado la partida.
  */
 server.put("/jugador/:id", (req, res) => {
     const id = req.params.id;
@@ -202,8 +223,7 @@ server.put("/jugador/:id", (req, res) => {
 });
 
 /**
- * @brief RUTA: Limpia el estado de la partida para que todas las palabras vuelvan a estar ocultas.
- * Pone el campo 'adivinada' a 'false' para todo el mundo.
+ * @brief RUTA: Resetea todas las palabras a no adivinadas para nueva partida.
  */
 server.put("/reset-partida", (req, res) => {
     const sql = "UPDATE jugadores_palabras SET adivinada = false";
@@ -213,5 +233,122 @@ server.put("/reset-partida", (req, res) => {
             return res.status(500).json({ error });
         }
         res.json({ mensaje: "Partida reseteada correctamente" });
+    });
+});
+
+/**
+ * @brief RUTA: Crea una nueva partida online con un codigo aleatorio de 6 caracteres.
+ */
+server.post("/partida", (req, res) => {
+    const { jugador1_id, nivel, genero } = req.body;
+    const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const sql = "INSERT INTO partidas (codigo, jugador1_id, turno_jugador_id, nivel, genero) VALUES (?, ?, ?, ?, ?)";
+    pool_mysql.query(sql, [codigo, jugador1_id, jugador1_id, nivel, genero], (error, resultado) => {
+        if (error) {
+            console.error("Error al crear partida:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ id: resultado.insertId, codigo });
+    });
+});
+
+/**
+ * @brief RUTA: El jugador 2 se une a una partida existente con el codigo.
+ */
+server.post("/unirse", (req, res) => {
+    const { codigo, jugador2_id } = req.body;
+    const sqlBuscar = "SELECT * FROM partidas WHERE codigo = ? AND estado = 'esperando'";
+    pool_mysql.query(sqlBuscar, [codigo], (error, resultados) => {
+        if (error) {
+            console.error("Error al buscar partida:", error);
+            return res.status(500).json({ error });
+        }
+        if (resultados.length === 0) {
+            return res.status(404).json({ error: "Partida no encontrada o ya en curso" });
+        }
+        const partida = resultados[0];
+        const sqlUnirse = "UPDATE partidas SET jugador2_id = ?, estado = 'jugando' WHERE id = ?";
+        pool_mysql.query(sqlUnirse, [jugador2_id, partida.id], (error2) => {
+            if (error2) {
+                console.error("Error al unirse:", error2);
+                return res.status(500).json({ error: error2 });
+            }
+            res.json({ id: partida.id, codigo, nivel: partida.nivel, genero: partida.genero, jugador1_id: partida.jugador1_id });
+        });
+    });
+});
+
+/**
+ * @brief RUTA: Devuelve el estado actual de la partida para el polling.
+ */
+server.get("/estado-partida/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "SELECT * FROM partidas WHERE id = ?";
+    pool_mysql.query(sql, [id], (error, resultados) => {
+        if (error) {
+            console.error("Error al obtener estado:", error);
+            return res.status(500).json({ error });
+        }
+        if (resultados.length === 0) {
+            return res.status(404).json({ error: "Partida no encontrada" });
+        }
+        res.json(resultados[0]);
+    });
+});
+
+/**
+ * @brief RUTA: Cambia el turno al otro jugador en la partida online.
+ */
+server.put("/cambiar-turno/:id", (req, res) => {
+    const id = req.params.id;
+    const sqlBuscar = "SELECT * FROM partidas WHERE id = ?";
+    pool_mysql.query(sqlBuscar, [id], (error, resultados) => {
+        if (error) {
+            console.error("Error al buscar partida:", error);
+            return res.status(500).json({ error });
+        }
+        if (resultados.length === 0) {
+            return res.status(404).json({ error: "Partida no encontrada" });
+        }
+        const partida = resultados[0];
+        const nuevoTurno = partida.turno_jugador_id === partida.jugador1_id ? partida.jugador2_id : partida.jugador1_id;
+        const sqlCambiar = "UPDATE partidas SET turno_jugador_id = ? WHERE id = ?";
+        pool_mysql.query(sqlCambiar, [nuevoTurno, id], (error2) => {
+            if (error2) {
+                console.error("Error al cambiar turno:", error2);
+                return res.status(500).json({ error: error2 });
+            }
+            res.json({ turno_jugador_id: nuevoTurno });
+        });
+    });
+});
+
+/**
+ * @brief RUTA: Marca la partida como abandonada para que el rival sepa que el jugador se fue.
+ */
+server.put("/abandonar-partida/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "UPDATE partidas SET estado = 'abandonada' WHERE id = ?";
+    pool_mysql.query(sql, [id], (error) => {
+        if (error) {
+            console.error("Error al abandonar partida:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Partida abandonada" });
+    });
+});
+
+/**
+ * @brief RUTA: Marca la partida como terminada.
+ */
+server.put("/terminar-partida/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "UPDATE partidas SET estado = 'terminada' WHERE id = ?";
+    pool_mysql.query(sql, [id], (error) => {
+        if (error) {
+            console.error("Error al terminar partida:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Partida terminada" });
     });
 });

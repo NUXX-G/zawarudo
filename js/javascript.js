@@ -1,5 +1,5 @@
 /**
- * @file index.js
+ * @file javascript.js
  * @brief Este script se encarga de configurar el menu principal antes de empezar a jugar.
  * @author Nelson y yeray
  */
