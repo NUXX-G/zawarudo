@@ -42,7 +42,9 @@ var estado = {
     rivalId: null,
     soyJ1: false,
     pollingInterval: null,
-    pollingIntentos: 0
+    pollingIntentos: 0,
+    tiempoJ1: 0,
+    tiempoJ2: 0
 };
 
 /** @brief Un almacen para recordar que letras ha ido diciendo cada jugador. */
@@ -107,13 +109,36 @@ function validarTituloRawg(titulo) {
 
 /**
  * @brief Arranca el reloj de la partida.
- * Cada segundo resta 1 y si quedan menos de 10 el reloj se pone rojo.
+ * Cada segundo resta 1 y si quedan menos de 10 el reloj se pone rojo,
+ * ademaás cada jugador tiene su tiempo individual
  */
 function iniciarTemporizador() {
-    estado.segundosRestantes = tiempos[String(estado.nivel)];
+    var tiempoActual;
+    if (estado.online) {
+        tiempoActual = estado.soyJ1 ? estado.tiempoJ1 : estado.tiempoJ2;
+    } else {
+        tiempoActual = estado.turno === 1 ? estado.tiempoJ1 : estado.tiempoJ2;
+    }
+    if (tiempoActual === 0) {
+        tiempoActual = tiempos[String(estado.nivel)];
+    }
+    estado.segundosRestantes = tiempoActual;
     actualizarDisplayTemporizador();
     estado.temporizador = setInterval(function() {
         estado.segundosRestantes--;
+        if (estado.online) {
+            if (estado.soyJ1) {
+                estado.tiempoJ1 = estado.segundosRestantes;
+            } else {
+                estado.tiempoJ2 = estado.segundosRestantes;
+            }
+        } else {
+            if (estado.turno === 1) {
+                estado.tiempoJ1 = estado.segundosRestantes;
+            } else {
+                estado.tiempoJ2 = estado.segundosRestantes;
+            }
+        }
         actualizarDisplayTemporizador();
         if (estado.segundosRestantes <= 10) {
             document.getElementById("temporizador").classList.add("urgente");
@@ -427,11 +452,25 @@ function iniciarPollingTurno() {
             }
             if (partida.estado === "terminada") {
                 clearInterval(estado.pollingInterval);
+                try {
+                    document.getElementById("titulo-ganador").textContent = "El rival ha ganado";
+                    document.getElementById("texto-ganador").textContent = "The World ha parado el tiempo";
+                    document.getElementById("nombre-final-j1").textContent = estado.j1.nombre;
+                    document.getElementById("puntos-final-j1").textContent = partida.puntos_j1 + " puntos";
+                    document.getElementById("nombre-final-j2").textContent = estado.j2.nombre;
+                    document.getElementById("puntos-final-j2").textContent = partida.puntos_j2 + " puntos";
+                    mostrarPantalla("pantalla-fin");
+                } catch (e) {
+                    console.error("Error al mostrar fin de partida:", e);
+                }
                 return;
             }
             if (partida.turno_jugador_id === estado.miJugadorId) {
                 clearInterval(estado.pollingInterval);
-                estado.pollingIntentos = 0;
+                estado.puntosJ1 = partida.puntos_j1;
+                estado.puntosJ2 = partida.puntos_j2;
+                estado.tiempoJ1 = partida.tiempo_j1;
+                estado.tiempoJ2 = partida.tiempo_j2;
                 mostrarPantalla("pantalla-juego");
                 actualizarCabeceraJuego();
                 cargarTableroRival();
@@ -590,9 +629,13 @@ function iniciarJuego() {
 /** @brief Actualiza el turno y los puntos en la cabecera del juego. */
 function actualizarCabeceraJuego() {
     try {
-        var jugadorActual = estado.turno === 1 ? estado.j1 : estado.j2;
-        document.getElementById("turno-titulo").textContent =
-            "Turno de " + jugadorActual.nombre;
+        var nombreActual;
+        if (estado.online) {
+            nombreActual = estado.soyJ1 ? estado.j1.nombre : estado.j2.nombre;
+        } else {
+            nombreActual = estado.turno === 1 ? estado.j1.nombre : estado.j2.nombre;
+        }
+        document.getElementById("turno-titulo").textContent = "Turno de " + nombreActual;
         document.getElementById("puntos-j1-label").textContent = estado.j1.nombre + ": ";
         document.getElementById("puntos-j2-label").textContent = estado.j2.nombre + ": ";
         document.getElementById("puntos-j1").textContent = estado.puntosJ1;
@@ -698,9 +741,22 @@ function pasarTurno() {
         document.getElementById("input-adivinar").value = "";
 
         if (estado.online) {
-            fetch(API + "/cambiar-turno/" + estado.partidaId, {
+            fetch(API + "/puntos/" + estado.partidaId, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    puntos_j1: estado.puntosJ1,
+                    puntos_j2: estado.puntosJ2,
+                    tiempo_j1: estado.tiempoJ1,
+                    tiempo_j2: estado.tiempoJ2
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function() {
+                return fetch(API + "/cambiar-turno/" + estado.partidaId, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                });
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
@@ -715,7 +771,7 @@ function pasarTurno() {
                 }
             })
             .catch(function(error) {
-                console.error("Error al cambiar turno online:", error);
+                console.error("Error al pasar turno online:", error);
             });
         } else {
             actualizarCabeceraJuego();
@@ -775,10 +831,18 @@ function proponerLetra() {
                     });
 
                     var puntos = apariciones * 5;
-                    if (estado.turno === 1) {
-                        estado.puntosJ1 += puntos;
+                    if (estado.online) {
+                        if (estado.soyJ1) {
+                            estado.puntosJ1 += puntos;
+                        } else {
+                            estado.puntosJ2 += puntos;
+                        }
                     } else {
-                        estado.puntosJ2 += puntos;
+                        if (estado.turno === 1) {
+                            estado.puntosJ1 += puntos;
+                        } else {
+                            estado.puntosJ2 += puntos;
+                        }
                     }
 
                     mostrarMensaje("msg-letra",
@@ -841,10 +905,18 @@ function adivinarTitulo() {
                 try {
                     var bonus = estado.segundosRestantes > tiempos[String(estado.nivel)] / 2 ? 20 : 0;
                     var puntos = 50 + bonus;
-                    if (estado.turno === 1) {
-                        estado.puntosJ1 += puntos;
+                    if (estado.online) {
+                        if (estado.soyJ1) {
+                            estado.puntosJ1 += puntos;
+                        } else {
+                            estado.puntosJ2 += puntos;
+                        }
                     } else {
-                        estado.puntosJ2 += puntos;
+                        if (estado.turno === 1) {
+                            estado.puntosJ1 += puntos;
+                        } else {
+                            estado.puntosJ2 += puntos;
+                        }
                     }
                     mostrarMensaje("msg-adivinar", "Correcto — +" + puntos + " puntos", "ok");
                     document.getElementById("input-adivinar").value = "";
@@ -875,12 +947,27 @@ function finPartida() {
         pararTemporizador();
         if (estado.pollingInterval) clearInterval(estado.pollingInterval);
 
-        var ganador = estado.turno === 1 ? estado.j1 : estado.j2;
+        var ganador = estado.online
+            ? (estado.soyJ1 ? estado.j1 : estado.j2)
+            : (estado.turno === 1 ? estado.j1 : estado.j2);
 
         if (estado.online) {
-            fetch(API + "/terminar-partida/" + estado.partidaId, {
+            fetch(API + "/puntos/" + estado.partidaId, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    puntos_j1: estado.puntosJ1,
+                    puntos_j2: estado.puntosJ2,
+                    tiempo_j1: estado.tiempoJ1,
+                    tiempo_j2: estado.tiempoJ2
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function() {
+                return fetch(API + "/terminar-partida/" + estado.partidaId, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" }
+                });
             })
             .then(function(res) { return res.json(); })
             .catch(function(error) {
@@ -937,7 +1024,9 @@ function resetearEstado() {
         palabrasInsertadasJ1: 0, palabrasInsertadasJ2: 0,
         online: false, partidaId: null, miJugadorId: null,
         rivalId: null, soyJ1: false, pollingInterval: null,
-        pollingIntentos: 0
+        pollingIntentos: 0,
+        tiempoJ1: 0,
+        tiempoJ2: 0
     };
     letrasReveladas = { 1: [], 2: [] };
 }

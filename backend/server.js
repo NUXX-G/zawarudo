@@ -85,28 +85,33 @@ server.post("/jugador", (req, res) => {
 
 /**
  * @brief RUTA: Guarda una palabra y la asocia a un jugador.
- * Primero mete la palabra en palabras y luego crea el vinculo en jugadores_palabras.
+ * Primero borra las palabras anteriores del jugador, luego inserta la nueva.
  */
 server.post("/palabra", (req, res) => {
     const { palabra, jugador_id } = req.body;
-    const sqlPalabra = "INSERT INTO palabras (palabra) VALUES (?)";
-    pool_mysql.query(sqlPalabra, [palabra], (error, resultado) => {
-        if (error) {
-            console.error("Error al insertar palabra:", error);
-            return res.status(500).json({ error });
+    const sqlBorrar = "DELETE FROM jugadores_palabras WHERE jugador_id = ?";
+    pool_mysql.query(sqlBorrar, [jugador_id], (errorBorrar) => {
+        if (errorBorrar) {
+            console.error("Error al borrar palabras anteriores:", errorBorrar);
         }
-        const palabra_id = resultado.insertId;
-        const sqlRelacion = "INSERT INTO jugadores_palabras (jugador_id, palabra_id, adivinada) VALUES (?, ?, false)";
-        pool_mysql.query(sqlRelacion, [jugador_id, palabra_id], (error2) => {
-            if (error2) {
-                console.error("Error al vincular palabra:", error2);
-                return res.status(500).json({ error: error2 });
+        const sqlPalabra = "INSERT INTO palabras (palabra) VALUES (?)";
+        pool_mysql.query(sqlPalabra, [palabra], (error, resultado) => {
+            if (error) {
+                console.error("Error al insertar palabra:", error);
+                return res.status(500).json({ error });
             }
-            res.json({ palabra_id, jugador_id, palabra });
+            const palabra_id = resultado.insertId;
+            const sqlRelacion = "INSERT INTO jugadores_palabras (jugador_id, palabra_id, adivinada) VALUES (?, ?, false)";
+            pool_mysql.query(sqlRelacion, [jugador_id, palabra_id], (error2) => {
+                if (error2) {
+                    console.error("Error al vincular palabra:", error2);
+                    return res.status(500).json({ error: error2 });
+                }
+                res.json({ palabra_id, jugador_id, palabra });
+            });
         });
     });
 });
-
 /**
  * @brief RUTA: Trae todas las palabras activas de un jugador concreto.
  * Hace un JOIN entre las tablas para saber que palabras son de quien.
@@ -350,5 +355,21 @@ server.put("/terminar-partida/:id", (req, res) => {
             return res.status(500).json({ error });
         }
         res.json({ mensaje: "Partida terminada" });
+    });
+});
+
+/**
+ * @brief RUTA: Actualiza los puntos de ambos jugadores en la partida.
+ */
+server.put("/puntos/:id", (req, res) => {
+    const id = req.params.id;
+    const { puntos_j1, puntos_j2, tiempo_j1, tiempo_j2 } = req.body;
+    const sql = "UPDATE partidas SET puntos_j1 = ?, puntos_j2 = ?, tiempo_j1 = ?, tiempo_j2 = ? WHERE id = ?";
+    pool_mysql.query(sql, [puntos_j1, puntos_j2, tiempo_j1, tiempo_j2, id], (error) => {
+        if (error) {
+            console.error("Error al actualizar puntos:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Puntos y tiempos actualizados" });
     });
 });
