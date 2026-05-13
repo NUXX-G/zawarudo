@@ -31,7 +31,7 @@ const pool_mysql = mysql.createPool({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "",
+    password: "0002",
     database: "zawarudo",
     waitForConnections: true,
     connectionLimit: 10,
@@ -112,6 +112,7 @@ server.post("/palabra", (req, res) => {
         });
     });
 });
+
 /**
  * @brief RUTA: Trae todas las palabras activas de un jugador concreto.
  * Hace un JOIN entre las tablas para saber que palabras son de quien.
@@ -259,6 +260,7 @@ server.post("/partida", (req, res) => {
 
 /**
  * @brief RUTA: El jugador 2 se une a una partida existente con el codigo.
+ * Comprueba que el nombre del jugador 2 no sea igual al del jugador 1.
  */
 server.post("/unirse", (req, res) => {
     const { codigo, jugador2_id } = req.body;
@@ -272,6 +274,9 @@ server.post("/unirse", (req, res) => {
             return res.status(404).json({ error: "Partida no encontrada o ya en curso" });
         }
         const partida = resultados[0];
+        if (partida.jugador1_id === jugador2_id) {
+            return res.status(400).json({ error: "No puedes unirte a tu propia partida" });
+        }
         const sqlUnirse = "UPDATE partidas SET jugador2_id = ?, estado = 'jugando' WHERE id = ?";
         pool_mysql.query(sqlUnirse, [jugador2_id, partida.id], (error2) => {
             if (error2) {
@@ -298,6 +303,22 @@ server.get("/estado-partida/:id", (req, res) => {
             return res.status(404).json({ error: "Partida no encontrada" });
         }
         res.json(resultados[0]);
+    });
+});
+
+/**
+ * @brief RUTA: Marca que un jugador ya inserto todas sus palabras.
+ * Incrementa el contador palabras_listas. Cuando llega a 2 ambos jugadores estan listos.
+ */
+server.put("/palabras-listas/:id", (req, res) => {
+    const id = req.params.id;
+    const sql = "UPDATE partidas SET palabras_listas = palabras_listas + 1 WHERE id = ?";
+    pool_mysql.query(sql, [id], (error) => {
+        if (error) {
+            console.error("Error al actualizar palabras listas:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Palabras listas actualizadas" });
     });
 });
 
@@ -329,6 +350,22 @@ server.put("/cambiar-turno/:id", (req, res) => {
 });
 
 /**
+ * @brief RUTA: Actualiza los puntos y tiempos de ambos jugadores en la partida.
+ */
+server.put("/puntos/:id", (req, res) => {
+    const id = req.params.id;
+    const { puntos_j1, puntos_j2, tiempo_j1, tiempo_j2 } = req.body;
+    const sql = "UPDATE partidas SET puntos_j1 = ?, puntos_j2 = ?, tiempo_j1 = ?, tiempo_j2 = ? WHERE id = ?";
+    pool_mysql.query(sql, [puntos_j1, puntos_j2, tiempo_j1, tiempo_j2, id], (error) => {
+        if (error) {
+            console.error("Error al actualizar puntos:", error);
+            return res.status(500).json({ error });
+        }
+        res.json({ mensaje: "Puntos y tiempos actualizados" });
+    });
+});
+
+/**
  * @brief RUTA: Marca la partida como abandonada para que el rival sepa que el jugador se fue.
  */
 server.put("/abandonar-partida/:id", (req, res) => {
@@ -355,21 +392,5 @@ server.put("/terminar-partida/:id", (req, res) => {
             return res.status(500).json({ error });
         }
         res.json({ mensaje: "Partida terminada" });
-    });
-});
-
-/**
- * @brief RUTA: Actualiza los puntos de ambos jugadores en la partida.
- */
-server.put("/puntos/:id", (req, res) => {
-    const id = req.params.id;
-    const { puntos_j1, puntos_j2, tiempo_j1, tiempo_j2 } = req.body;
-    const sql = "UPDATE partidas SET puntos_j1 = ?, puntos_j2 = ?, tiempo_j1 = ?, tiempo_j2 = ? WHERE id = ?";
-    pool_mysql.query(sql, [puntos_j1, puntos_j2, tiempo_j1, tiempo_j2, id], (error) => {
-        if (error) {
-            console.error("Error al actualizar puntos:", error);
-            return res.status(500).json({ error });
-        }
-        res.json({ mensaje: "Puntos y tiempos actualizados" });
     });
 });

@@ -398,6 +398,7 @@ footer p {
     display: flex;
     gap: 8px;
     align-items: center;
+    width: 100%;
 }
 
 .fila-input input {
@@ -409,6 +410,7 @@ footer p {
     font-family: Arial, sans-serif;
     outline: none;
     flex: 1;
+    min-width: 0;
     height: 44px;
     transition: border-color 0.3s, box-shadow 0.3s;
 }
@@ -423,12 +425,13 @@ footer p {
     padding: 0 20px;
     white-space: nowrap;
     font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 0;
 }
 
 .mensaje {
     font-size: 14px;
     min-height: 20px;
-    transition: opacity 0.3s;
 }
 
 .mensaje.ok {
@@ -498,17 +501,6 @@ footer p {
     font-size: 18px;
 }
 
-.video-fondo {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -1;
-    opacity: 0.3;
-}
-
 .spinner {
     width: 48px;
     height: 48px;
@@ -518,9 +510,15 @@ footer p {
     animation: girar 1s linear infinite;
 }
 
-@keyframes girar {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+.video-fondo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.3;
 }
 
 @keyframes entradaTitulo {
@@ -563,4 +561,9 @@ footer p {
     50%  { transform: translateX(6px); }
     75%  { transform: translateX(-4px); }
     100% { transform: translateX(0); }
+}
+
+@keyframes girar {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }

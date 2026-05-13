@@ -44,7 +44,8 @@ var estado = {
     pollingInterval: null,
     pollingIntentos: 0,
     tiempoJ1: 0,
-    tiempoJ2: 0
+    tiempoJ2: 0,
+    procesando: false
 };
 
 /** @brief Un almacen para recordar que letras ha ido diciendo cada jugador. */
@@ -82,6 +83,52 @@ function mostrarMensaje(id, texto, tipo) {
 }
 
 /**
+ * @brief Limpia todos los mensajes y inputs de la pantalla de juego.
+ */
+function limpiarPantallaJuego() {
+    try {
+        mostrarMensaje("msg-letra", "", "");
+        mostrarMensaje("msg-adivinar", "", "");
+        document.getElementById("input-letra").value = "";
+        document.getElementById("input-adivinar").value = "";
+    } catch (error) {
+        console.error("Error al limpiar pantalla juego:", error);
+    }
+}
+
+/**
+ * @brief Bloquea los botones de accion cuando no es el turno del jugador.
+ */
+function bloquearAcciones() {
+    try {
+        document.getElementById("btn-letra").disabled = true;
+        document.getElementById("btn-adivinar").disabled = true;
+        document.getElementById("input-letra").disabled = true;
+        document.getElementById("input-adivinar").disabled = true;
+        document.getElementById("btn-letra").style.opacity = "0.4";
+        document.getElementById("btn-adivinar").style.opacity = "0.4";
+    } catch (error) {
+        console.error("Error al bloquear acciones:", error);
+    }
+}
+
+/**
+ * @brief Desbloquea los botones de accion cuando es el turno del jugador.
+ */
+function desbloquearAcciones() {
+    try {
+        document.getElementById("btn-letra").disabled = false;
+        document.getElementById("btn-adivinar").disabled = false;
+        document.getElementById("input-letra").disabled = false;
+        document.getElementById("input-adivinar").disabled = false;
+        document.getElementById("btn-letra").style.opacity = "1";
+        document.getElementById("btn-adivinar").style.opacity = "1";
+    } catch (error) {
+        console.error("Error al desbloquear acciones:", error);
+    }
+}
+
+/**
  * @brief Consulta RAWG.io para comprobar si un titulo es un videojuego real.
  * Si la API falla, deja pasar el titulo igualmente para no bloquear el juego.
  * @param titulo El nombre del videojuego a validar.
@@ -109,8 +156,7 @@ function validarTituloRawg(titulo) {
 
 /**
  * @brief Arranca el reloj de la partida.
- * Cada segundo resta 1 y si quedan menos de 10 el reloj se pone rojo,
- * ademaás cada jugador tiene su tiempo individual
+ * Cada jugador tiene su tiempo individual que se pausa cuando no es su turno.
  */
 function iniciarTemporizador() {
     var tiempoActual;
@@ -361,6 +407,7 @@ function esperarJugador2() {
 
 /**
  * @brief El jugador 2 se une a una sala existente con el codigo.
+ * Comprueba que el nombre no sea igual al del jugador 1 antes de unirse.
  */
 function unirseASala() {
     try {
@@ -398,14 +445,20 @@ function unirseASala() {
             });
         })
         .then(function(res) {
-            if (!res.ok) throw new Error("Sala no encontrada o ya en curso");
+            if (!res.ok) {
+                if (res.status === 400) {
+                    mostrarMensaje("msg-online", "No puedes unirte con el mismo nombre que el creador", "error");
+                } else {
+                    mostrarMensaje("msg-online", "Sala no encontrada o ya en curso", "error");
+                }
+                throw new Error("Error al unirse");
+            }
             return res.json();
         })
         .then(function(partida) {
             estado.partidaId = partida.id;
             estado.nivel = partida.nivel;
             estado.genero = partida.genero;
-
             return fetch(API + "/jugador/" + partida.jugador1_id);
         })
         .then(function(res) { return res.json(); })
@@ -416,7 +469,6 @@ function unirseASala() {
         })
         .catch(function(error) {
             console.error("Error al unirse:", error);
-            mostrarMensaje("msg-online", "Sala no encontrada o ya en curso", "error");
         });
     } catch (error) {
         console.error("Error en unirseASala:", error);
@@ -424,9 +476,8 @@ function unirseASala() {
 }
 
 /**
- * @brief Polling del turno: comprueba cada 2 segundos si es el turno del jugador.
- * Si detecta que la partida fue abandonada avisa y vuelve al menu.
- * Si pasan 5 minutos sin cambio asume que el rival se fue.
+ * @brief Polling del turno: comprueba cada 2 segundos si ambos jugadores insertaron palabras
+ * y si es el turno del jugador actual. Gestiona partidas abandonadas y terminadas.
  */
 function iniciarPollingTurno() {
     if (estado.pollingInterval) clearInterval(estado.pollingInterval);
@@ -465,16 +516,27 @@ function iniciarPollingTurno() {
                 }
                 return;
             }
+            if (partida.palabras_listas < 2) {
+                return;
+            }
             if (partida.turno_jugador_id === estado.miJugadorId) {
                 clearInterval(estado.pollingInterval);
                 estado.puntosJ1 = partida.puntos_j1;
                 estado.puntosJ2 = partida.puntos_j2;
                 estado.tiempoJ1 = partida.tiempo_j1;
                 estado.tiempoJ2 = partida.tiempo_j2;
+                estado.procesando = false;
+                desbloquearAcciones();
+                limpiarPantallaJuego();
                 mostrarPantalla("pantalla-juego");
                 actualizarCabeceraJuego();
                 cargarTableroRival();
                 iniciarTemporizador();
+            } else if (partida.palabras_listas >= 2) {
+                clearInterval(estado.pollingInterval);
+                bloquearAcciones();
+                mostrarPantalla("pantalla-espera-turno");
+                iniciarPollingTurno();
             }
         })
         .catch(function(error) {
@@ -518,6 +580,7 @@ function prepararInsertarPalabras(numJugador) {
 
 /**
  * @brief Valida con RAWG y guarda los titulos del jugador en la API.
+ * En modo online avisa al servidor cuando termina para sincronizar con el rival.
  * @param numJugador El jugador que esta enviando sus palabras.
  */
 function guardarPalabras(numJugador) {
@@ -577,15 +640,19 @@ function guardarPalabras(numJugador) {
             Promise.all(promesas)
             .then(function() {
                 if (estado.online) {
-                    if (estado.soyJ1 && numJugador === 1) {
+                    fetch(API + "/palabras-listas/" + estado.partidaId, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" }
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function() {
+                        bloquearAcciones();
                         mostrarPantalla("pantalla-espera-turno");
                         iniciarPollingTurno();
-                    } else if (!estado.soyJ1 && numJugador === 2) {
-                        mostrarPantalla("pantalla-espera-turno");
-                        iniciarPollingTurno();
-                    } else {
-                        iniciarJuego();
-                    }
+                    })
+                    .catch(function(error) {
+                        console.error("Error al marcar palabras listas:", error);
+                    });
                 } else {
                     if (numJugador === 1) {
                         prepararInsertarPalabras(2);
@@ -610,6 +677,9 @@ function guardarPalabras(numJugador) {
 /** @brief Configura la pantalla de juego y arranca el temporizador. */
 function iniciarJuego() {
     try {
+        estado.procesando = false;
+        desbloquearAcciones();
+        limpiarPantallaJuego();
         mostrarPantalla("pantalla-juego");
         actualizarCabeceraJuego();
         cargarTableroRival();
@@ -728,17 +798,16 @@ function revelarLetras(palabra, letras) {
 
 /**
  * @brief Cambia el turno al otro jugador y limpia los inputs.
- * En modo online avisa al servidor del cambio y espera con polling.
+ * En modo online guarda puntos y tiempos y luego cambia el turno en el servidor.
  */
 function pasarTurno() {
     try {
+        estado.procesando = false;
+        bloquearAcciones();
         pararTemporizador();
         estado.turno = estado.turno === 1 ? 2 : 1;
 
-        mostrarMensaje("msg-letra", "", "");
-        mostrarMensaje("msg-adivinar", "", "");
-        document.getElementById("input-letra").value = "";
-        document.getElementById("input-adivinar").value = "";
+        limpiarPantallaJuego();
 
         if (estado.online) {
             fetch(API + "/puntos/" + estado.partidaId, {
@@ -765,6 +834,8 @@ function pasarTurno() {
                     mostrarPantalla("pantalla-espera-turno");
                     iniciarPollingTurno();
                 } else {
+                    estado.procesando = false;
+                    desbloquearAcciones();
                     actualizarCabeceraJuego();
                     cargarTableroRival();
                     iniciarTemporizador();
@@ -785,17 +856,23 @@ function pasarTurno() {
 
 /**
  * @brief Valida la letra del usuario y pregunta al servidor si aparece en las palabras del rival.
+ * Usa el flag procesando para evitar que se ejecute mas de una vez a la vez.
  */
 function proponerLetra() {
     try {
+        if (estado.procesando) return;
+        estado.procesando = true;
+
         var letra = document.getElementById("input-letra").value.trim();
 
         if (!letra || letra.length !== 1) {
-            mostrarMensaje("msg-letra", "Introduce una sola letra", "error");
+            mostrarMensaje("msg-letra", "Introduce una sola letra o numero", "error");
+            estado.procesando = false;
             return;
         }
-        if (!/^[a-zA-Z]$/.test(letra)) {
-            mostrarMensaje("msg-letra", "Solo se permiten letras", "error");
+        if (!/^[a-zA-Z0-9]$/.test(letra)) {
+            mostrarMensaje("msg-letra", "Solo se permiten letras y numeros", "error");
+            estado.procesando = false;
             return;
         }
 
@@ -804,6 +881,7 @@ function proponerLetra() {
 
         if (letrasReveladas[rivalNum].includes(letraLower)) {
             mostrarMensaje("msg-letra", "Esa letra ya fue usada", "error");
+            estado.procesando = false;
             return;
         }
 
@@ -852,6 +930,7 @@ function proponerLetra() {
 
                     cargarTableroRival();
                     actualizarCabeceraJuego();
+                    estado.procesando = false;
                 } else {
                     mostrarMensaje("msg-letra",
                         "La letra " + letraLower.toUpperCase() +
@@ -862,26 +941,33 @@ function proponerLetra() {
                 document.getElementById("input-letra").value = "";
             } catch (error) {
                 console.error("Error al procesar respuesta de letra:", error);
+                estado.procesando = false;
             }
         })
         .catch(function(error) {
             console.error("Error al proponer letra:", error);
             mostrarMensaje("msg-letra", "Error al conectar con el servidor", "error");
+            estado.procesando = false;
         });
     } catch (error) {
         console.error("Error en proponerLetra:", error);
+        estado.procesando = false;
     }
 }
 
 /**
  * @brief Comprueba si el titulo escrito coincide con alguno del rival.
- * Si acierta da puntos y borra la palabra; si falla pierde el turno.
+ * Usa el flag procesando para evitar que se ejecute mas de una vez a la vez.
  */
 function adivinarTitulo() {
     try {
+        if (estado.procesando) return;
+        estado.procesando = true;
+
         var intento = document.getElementById("input-adivinar").value.trim().toLowerCase();
         if (!intento) {
             mostrarMensaje("msg-adivinar", "Escribe un titulo", "error");
+            estado.procesando = false;
             return;
         }
 
@@ -922,13 +1008,16 @@ function adivinarTitulo() {
                     document.getElementById("input-adivinar").value = "";
                     actualizarCabeceraJuego();
                     cargarTableroRival();
+                    estado.procesando = false;
                 } catch (error) {
                     console.error("Error al procesar titulo adivinado:", error);
+                    estado.procesando = false;
                 }
             })
             .catch(function(error) {
                 console.error("Error al adivinar titulo:", error);
                 mostrarMensaje("msg-adivinar", "Error al conectar con el servidor", "error");
+                estado.procesando = false;
             });
         } else {
             mostrarMensaje("msg-adivinar", "Incorrecto — pierdes el turno", "error");
@@ -936,11 +1025,12 @@ function adivinarTitulo() {
         }
     } catch (error) {
         console.error("Error en adivinarTitulo:", error);
+        estado.procesando = false;
     }
 }
 
 /**
- * @brief Cierra la partida, actualiza victorias y muestra el marcador final.
+ * @brief Cierra la partida, guarda puntos finales, actualiza victorias y muestra el marcador.
  */
 function finPartida() {
     try {
@@ -1024,9 +1114,8 @@ function resetearEstado() {
         palabrasInsertadasJ1: 0, palabrasInsertadasJ2: 0,
         online: false, partidaId: null, miJugadorId: null,
         rivalId: null, soyJ1: false, pollingInterval: null,
-        pollingIntentos: 0,
-        tiempoJ1: 0,
-        tiempoJ2: 0
+        pollingIntentos: 0, tiempoJ1: 0, tiempoJ2: 0,
+        procesando: false
     };
     letrasReveladas = { 1: [], 2: [] };
 }
@@ -1092,6 +1181,9 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("nombre-j1").value = "";
             document.getElementById("nombre-j2").value = "";
             document.getElementById("genero-sorteado").textContent = "—";
+            document.getElementById("nombre-online").value = "";
+            document.getElementById("codigo-sala").value = "";
+            mostrarMensaje("msg-online", "", "");
         } catch (e) {}
         mostrarPantalla("pantalla-modo");
     });
