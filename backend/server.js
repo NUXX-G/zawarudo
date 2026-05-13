@@ -31,7 +31,7 @@ const pool_mysql = mysql.createPool({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "0002",
+    password: "",
     database: "zawarudo",
     waitForConnections: true,
     connectionLimit: 10,

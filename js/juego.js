@@ -552,10 +552,8 @@ function iniciarPollingTurno() {
 function prepararInsertarPalabras(numJugador) {
     try {
         var jugador = numJugador === 1 ? estado.j1 : estado.j2;
-        document.getElementById("titulo-insertar").textContent =
-            jugador.nombre + " — introduce tus titulos";
-        document.getElementById("genero-actual").textContent =
-            "Genero: " + estado.genero;
+        document.getElementById("titulo-insertar").textContent = jugador.nombre + " — introduce tus titulos";
+        document.getElementById("genero-actual").textContent = "Genero: " + estado.genero;
 
         var contenedor = document.getElementById("inputs-palabras");
         contenedor.innerHTML = "";

@@ -15,10 +15,7 @@ La idea es que dos jugadores se registran, eligen una dificultad y sortean un ge
 
 ## Lo que queda pendiente
 Todavia no esta todo terminado. Esto es lo que falta por meter:
-*   **Ranking:** La pagina ya existe pero aun no muestra la lista de los mejores jugadores. Tenemos que conectar bien los datos para que se vea quien manda.
-*   **Arreglar Errores** Hay algun que otro error que no hemos corregido.
-*   **Sistema Online** Nos gustari meter un sistema online si nos sobra tiempo.
-*   **Ajustes varios:** Algun retoque en el diseño y terminar de pulir que el servidor no de problemas cuando hay mucha tralla.
+*   **Ajustes varios:** Algun retoque en el diseño y terminar de pulir.
 
 ## Los autores
 Yeray y Nelson. Ambos somos unos genios de la programcion, hemos tocado un poco de todo cada uno, 

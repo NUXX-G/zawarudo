@@ -1,7 +1,19 @@
 Fondo de JoJo's: Hemos metido un video de fondo en el menu. Es de JoJo's, queda increible y, la verdad, era algo obligatorio para subir el nivel (PERDON, al parecer mi compañero no realizo un pull, y forzo un push y elimino el video, en la proxima version si estara).
 
-Musica a tope: Ahora hay canciones tanto en el menu principal como dentro del juego. Le da toda la emocion que le faltaba (Te recomeindo bajar el volumen ;)).
+Musica a tope: Ahora hay canciones tanto en el menu principal como dentro del juego. Le da toda la emocion que le faltaba (Te recomiendo bajar el volumen ;)).
 
-Iconos locos (Favicons): El icono de la pestaña del navegador cambia solo. Cada vez que entras puede salir uno distinto. Es un detalle muy guapo que hace la pagina mas dinamica (Y uque era completamente esencial para nuestra pagina).
+Iconos locos (Favicons): El icono de la pestaña del navegador cambia solo. Cada vez que entras puede salir uno distinto. Es un detalle muy guapo que hace la pagina mas dinamica (Y que era completamente esencial para nuestra pagina).
 
-Volumen pro: Hemos programado la musica para que no te exploten los oidos, bajandola un poquito por defecto (Aun asi sigue super alta, esot para que no te quedes dormido).
+Volumen pro: Hemos programado la musica para que no te exploten los oidos, bajandola un poquito por defecto (Aun asi sigue super alta, esto para que no te quedes dormido).
+
+Modo online: Hemos metido un modo multijugador online. Un jugador crea una sala y le pasa el codigo al rival, que se une desde otro dispositivo. Los turnos se sincronizan automaticamente entre los dos navegadores usando polling cada 2 segundos. Si uno se va, el otro recibe un aviso.
+
+Validacion con RAWG.io: Antes podias poner cualquier cosa como titulo. Ahora el juego consulta la API de RAWG.io para comprobar que lo que escribes es un videojuego real. Si no lo encuentra te avisa, aunque te deja seguir si quieres.
+
+Ranking conectado: La pagina de ranking ya no tiene datos de mentira. Ahora se conecta a la base de datos y muestra de verdad quien mas partidas ha ganado.
+
+Temporizador individual: Cada jugador tiene su propio tiempo que no se reinicia entre turnos. Si te sobra tiempo de un turno anterior, lo conservas.
+
+Animaciones: Hemos metido un monton de animaciones nuevas. Los mensajes de error se sacuden, las palabras adivinadas hacen un rebote verde, el genero sorteado pulsa, las pantallas entran con fade y los titulos caen desde arriba.
+
+Doxygen completo: Todos los archivos JavaScript tienen documentacion Doxygen explicando cada funcion, parametro y lo que devuelve.
