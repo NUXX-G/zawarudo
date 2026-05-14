@@ -6,7 +6,9 @@
  */
 
 /** @brief La direccion donde esta escuchando nuestro servidor */
-const API = "http://localhost:3000";
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : "https://zawarudo.nelsonffkarlsson.com/api";
 
 /** @brief La API key de RAWG.io para validar que los titulos sean videojuegos reales */
 const RAWG_KEY = "1e728ef460044d1d838e3727bd988f1d";

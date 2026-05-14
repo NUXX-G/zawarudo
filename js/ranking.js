@@ -5,7 +5,9 @@
  */
 
 /** @brief Direccion del servidor backend */
-const API = "http://localhost:3000";
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000"
+    : "https://zawarudo.nelsonffkarlsson.com/api";
 
 /**
  * @brief Carga el ranking desde la API y lo muestra en la tabla.

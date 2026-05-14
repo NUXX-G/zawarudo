@@ -1,4 +1,4 @@
-Fondo de JoJo's: Hemos metido un video de fondo en el menu. Es de JoJo's, queda increible y, la verdad, era algo obligatorio para subir el nivel (PERDON, al parecer mi compañero no realizo un pull, y forzo un push y elimino el video, en la proxima version si estara).
+Despliegue en servidor: Se ha desplegado todo en un vps contratado de ionos simplemente se han hecho unos pequeños cambios en las URLS y esta todo correcto, la pagina en cuestión es: https://zawarudo.nelsonffkarlsson.com/index.html
 
 Musica a tope: Ahora hay canciones tanto en el menu principal como dentro del juego. Le da toda la emocion que le faltaba (Te recomiendo bajar el volumen ;)).
 
